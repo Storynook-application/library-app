@@ -1,19 +1,29 @@
+// src/server.ts
+
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import authRouter from './routes/auth';
+import './utils/cleanupTokens'; // Import the cleanup task
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Apply Helmet middleware for security headers
+app.use(helmet());
+
 app.use(express.json());
 
+app.use('/auth', authRouter);
+
+// In server.ts or app.ts:
 app.get('/', (req, res) => {
-  res.send('Hello from the backend!');
+  res.send('Hello, you have reached the Library App Backend!');
 });
 
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Backend server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

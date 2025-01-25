@@ -1,14 +1,12 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { pool } from '../db';
-import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { sendGraphMail } from '../utils/graphMailer';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 
-dotenv.config();
 const authRouter = Router();
 
 // POST /auth/register
@@ -31,7 +29,7 @@ authRouter.post('/register', async (req, res) => {
 
     // 3. Insert the new user
     const insertUser = await pool.query(
-      `INSERT INTO users (email, password_hash) 
+      `INSERT INTO users (email, password_hash)
        VALUES ($1, $2) RETURNING id, email, created_at`,
       [email, passwordHash]
     );
@@ -95,7 +93,7 @@ authRouter.post('/login', async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
-  
+
 // POST /auth/forgot-password
 authRouter.post('/forgot-password', async (req, res) => {
   try {

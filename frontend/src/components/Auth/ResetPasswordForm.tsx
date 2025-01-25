@@ -1,14 +1,15 @@
-// src/components/ResetPasswordForm.tsx
+// src/components/Auth/ResetPasswordForm.tsx
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 
 const ResetPasswordForm: React.FC = () => {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordStrength, setPasswordStrength] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [passwordStrength, setPasswordStrength] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -48,27 +49,25 @@ const ResetPasswordForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPassword }),
+      const response = await api.post('/auth/reset-password', {
+        token,
+        newPassword,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Password reset failed.');
-        return;
+      if (response.status === 200) {
+        setMessage('Your password has been reset successfully!');
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        setError(response.data.error || 'Password reset failed.');
       }
-
-      setMessage('Your password has been reset successfully!');
-      // Optionally, redirect to login after a delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
-    } catch (err) {
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error || 'Server error. Please try again later.'
+      );
       console.error('Reset Password error:', err);
-      setError('Server error. Please try again later.');
     }
   };
 
@@ -89,7 +88,9 @@ const ResetPasswordForm: React.FC = () => {
             style={{ width: '100%', padding: '0.5rem' }}
           />
           {passwordStrength && (
-            <p>Password Strength: <strong>{passwordStrength}</strong></p>
+            <p>
+              Password Strength: <strong>{passwordStrength}</strong>
+            </p>
           )}
         </div>
 

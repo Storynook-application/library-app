@@ -1,22 +1,27 @@
+# backend/Dockerfile
+
 FROM node:18-alpine
 
-# 1. Add build dependencies for native modules like bcrypt
-RUN apk add --no-cache python3 make g++
-
-# 2. Create app directory
+# Set working directory
 WORKDIR /app
 
-# 3. Copy ONLY package files first
+# Copy package.json and package-lock.json
 COPY backend/package*.json ./
 
-# 4. Install Node modules (including bcrypt) *inside* the container
+# Install dependencies
 RUN npm install
 
-# 5. Copy the rest of your backend code
-COPY backend/ ./
+# Copy tsconfig.json
+COPY backend/tsconfig.json ./
 
-# 6. Build (if you have a TS build step)
+# Copy backend source code
+COPY backend/src ./src
+
+# Build the backend
 RUN npm run build
 
+# Expose port
 EXPOSE 5000
-CMD ["npm", "start"]
+
+# Start the backend
+CMD ["node", "dist/server.js"]

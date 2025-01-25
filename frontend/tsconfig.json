@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es5", // or "es6"/"es2015" based on your requirements
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true, // Enables strict type-checking options
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx" // Use "react" if you're on an older React version
+  },
+  "include": ["src"]
+}

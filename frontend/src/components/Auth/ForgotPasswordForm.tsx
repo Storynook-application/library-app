@@ -1,11 +1,12 @@
-// src/components/ForgotPasswordForm.tsx
+// src/components/Auth/ForgotPasswordForm.tsx
 
 import React, { useState } from 'react';
+import api from '../../services/api';
 
 const ForgotPasswordForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -13,24 +14,21 @@ const ForgotPasswordForm: React.FC = () => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+      const response = await api.post('/auth/forgot-password', { email });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Request failed.');
-        return;
+      if (response.status === 200) {
+        setMessage(
+          'If that email is in our system, a reset link has been sent.'
+        );
+        setEmail('');
+      } else {
+        setError(response.data.error || 'Request failed.');
       }
-
-      setMessage('If that email is in our system, a reset link has been sent.');
-      setEmail('');
-    } catch (err) {
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error || 'Server error. Please try again later.'
+      );
       console.error('Forgot Password error:', err);
-      setError('Server error. Please try again later.');
     }
   };
 

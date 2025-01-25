@@ -3,9 +3,6 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
 import { ClientSecretCredential } from "@azure/identity";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // Initialize the Azure AD credential
 const credential = new ClientSecretCredential(
@@ -28,7 +25,7 @@ const fromAddress = process.env.GRAPH_FROM_ADDRESS || "support@storynook.be";
 
 /**
  * Send an email via Microsoft Graph's /sendMail endpoint
- * 
+ *
  * @param toEmail   The recipient's email address
  * @param subject   The email subject
  * @param body      The email body text (or HTML if you prefer)

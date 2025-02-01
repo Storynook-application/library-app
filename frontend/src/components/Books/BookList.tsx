@@ -27,12 +27,17 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editBook, setEditBook] = useState<Book | null>(null);
+  const [search, setSearch] = useState(''); // user-typed search
 
+  /**
+   * Fetch all books ONCE on mount, ignoring search.
+   * This ensures we have the full list initially.
+   */
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
-        // Fetch books from /libraries/:libraryId/books
+        // No search param initially
         const response = await api.get(`/libraries/${libraryId}/books`);
         setBooks(response.data);
       } catch (err) {
@@ -43,10 +48,31 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
       }
     };
 
+    // Only fetch once if we have a valid library ID
     if (libraryId) {
       fetchBooks();
     }
   }, [libraryId]);
+
+  /**
+   * handleSearch: Called when the user clicks "Search" button.
+   * If search is empty, fetch all books. Otherwise, add ?search=...
+   */
+  const handleSearch = async () => {
+    try {
+      setLoading(true);
+      const queryParam = search ? `?search=${encodeURIComponent(search)}` : '';
+      const response = await api.get(
+        `/libraries/${libraryId}/books${queryParam}`
+      );
+      setBooks(response.data);
+    } catch (err) {
+      setError('Failed to fetch books.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -74,7 +100,20 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
   return (
     <div>
       <h2>Books in Library {libraryId}</h2>
+
+      {/* Search UI */}
+      <div style={{ margin: '1rem 0' }}>
+        <input
+          type="text"
+          placeholder="Search books..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
+      </div>
+
       <button onClick={() => setShowCreateForm(true)}>Add New Book</button>
+
       {showCreateForm && (
         <BookForm
           libraryId={libraryId || 0}
@@ -82,6 +121,7 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
           onCreate={handleCreate}
         />
       )}
+
       {editBook && (
         <BookEditForm
           libraryId={libraryId || 0}
@@ -90,6 +130,7 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
           onUpdate={handleUpdate}
         />
       )}
+
       <ul>
         {books.length > 0 ? (
           books.map((book) => (

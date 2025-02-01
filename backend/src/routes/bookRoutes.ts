@@ -47,30 +47,39 @@ bookRouter.get('/', authenticateUser, async (req: AuthenticatedRequest, res) => 
   try {
     const { libraryId } = req.params;
     const userId = req.user?.id;
+    const searchQuery = (req.query.search as string) || '';
 
     // Verify library belongs to user
-    const library = await pool.query(
+    const libraryCheck = await pool.query(
       'SELECT * FROM libraries WHERE id = $1 AND user_id = $2',
       [libraryId, userId]
     );
-    if (library.rowCount === 0) {
+    if (libraryCheck.rowCount === 0) {
       return res.status(404).json({ error: 'Library not found or not authorized' });
     }
 
-    // Get books for that library
+    if (!searchQuery) {
+      // No search parameter, return all
+      const books = await pool.query(
+        'SELECT * FROM books WHERE library_id = $1',
+        [libraryId]
+      );
+      return res.json(books.rows);
+    }
+
+    // Search parameter present, partial match on title, author, or isbn
     const books = await pool.query(
-      'SELECT * FROM books WHERE library_id = $1',
-      [libraryId]
+      `SELECT * FROM books
+       WHERE library_id = $1
+       AND (
+         title ILIKE '%' || $2 || '%'
+         OR author ILIKE '%' || $2 || '%'
+         OR isbn ILIKE '%' || $2 || '%'
+       )`,
+      [libraryId, searchQuery]
     );
 
-    // Map to parse rating
-    const parsedBooks = books.rows.map((b) => ({
-      ...b,
-      rating: parseFloat(b.rating),
-    }));
-
-    return res.json(parsedBooks);
-
+    return res.json(books.rows);
   } catch (error) {
     console.error('[VIEW BOOKS ERROR]', error);
     res.status(500).json({ error: 'Server error' });

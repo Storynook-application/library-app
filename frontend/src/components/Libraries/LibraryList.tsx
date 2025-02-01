@@ -21,17 +21,31 @@ const LibraryList = () => {
   const [error, setError] = useState<string>('');
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
   const [editLibrary, setEditLibrary] = useState<Library | null>(null);
+  const [search, setSearch] = useState('');
 
-  const fetchLibraries = async () => {
+  useEffect(() => {
+    const fetchLibraries = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/libraries'); // no search param
+        setLibraries(response.data);
+      } catch (err) {
+        setError('Failed to fetch libraries.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLibraries();
+  }, []);
+
+  const handleSearch = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/libraries');
-      if (Array.isArray(response.data)) {
-        setLibraries(response.data);
-      } else {
-        console.warn('Unexpected response format:', response.data);
-        setLibraries([]);
-      }
+      const queryParam = search ? `?search=${encodeURIComponent(search)}` : '';
+      const response = await api.get(`/libraries${queryParam}`);
+      setLibraries(response.data);
     } catch (err) {
       setError('Failed to fetch libraries.');
       console.error(err);
@@ -39,10 +53,6 @@ const LibraryList = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchLibraries();
-  }, []);
 
   const handleDelete = async (id: number) => {
     try {
@@ -82,6 +92,16 @@ const LibraryList = () => {
       <button onClick={() => setShowCreateForm(true)}>
         Create New Library
       </button>
+      {/* Search UI */}
+      <div style={{ margin: '1rem 0' }}>
+        <input
+          type="text"
+          placeholder="Search libraries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
+      </div>
 
       {showCreateForm && (
         <LibraryForm

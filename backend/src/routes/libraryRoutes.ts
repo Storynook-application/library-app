@@ -33,14 +33,27 @@ libraryRouter.post('/', authenticateUser, async (req: AuthenticatedRequest, res)
 libraryRouter.get('/', authenticateUser, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user?.id;
+    const searchQuery = (req.query.search as string) || ''; // can be empty
 
-    const libraries = await pool.query(
-      'SELECT * FROM libraries WHERE user_id = $1',
-      [userId]
+    // If searchQuery is empty, just get all libraries
+    if (!searchQuery) {
+      const result = await pool.query(
+        'SELECT * FROM libraries WHERE user_id = $1 ORDER BY created_at DESC',
+        [userId]
+      );
+      return res.json(result.rows); // always an array
+    }
+
+    // If there's a search parameter, do a partial match on name (case-insensitive)
+    // Using ILIKE in Postgres for case-insensitive pattern matching
+    const result = await pool.query(
+      `SELECT * FROM libraries
+       WHERE user_id = $1 AND name ILIKE '%' || $2 || '%'
+       ORDER BY created_at DESC`,
+      [userId, searchQuery]
     );
 
-    // Always return an array, even if it's empty
-    res.json(libraries.rows);
+    return res.json(result.rows); // still an array
   } catch (error) {
     console.error('[FETCH LIBRARIES ERROR]', error);
     res.status(500).json({ error: 'Server error' });

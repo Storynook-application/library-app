@@ -4,6 +4,30 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import BookForm from './BookForm';
 import BookEditForm from './BookEditForm';
+import placeholderCover from '../../assets/images/placeholder-cover.png';
+import {
+  Container,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  IconButton,
+  TextField,
+  Button,
+  Box,
+  Paper,
+  Rating,
+  Fab,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
 
 interface Book {
   id: number;
@@ -15,6 +39,7 @@ interface Book {
   library_id: number;
   created_at: string;
   updated_at: string;
+  cover_url?: string;
 }
 
 interface BookListProps {
@@ -27,17 +52,12 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editBook, setEditBook] = useState<Book | null>(null);
-  const [search, setSearch] = useState(''); // user-typed search
+  const [search, setSearch] = useState('');
 
-  /**
-   * Fetch all books ONCE on mount, ignoring search.
-   * This ensures we have the full list initially.
-   */
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
-        // No search param initially
         const response = await api.get(`/libraries/${libraryId}/books`);
         setBooks(response.data);
       } catch (err) {
@@ -48,16 +68,11 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
       }
     };
 
-    // Only fetch once if we have a valid library ID
     if (libraryId) {
       fetchBooks();
     }
   }, [libraryId]);
 
-  /**
-   * handleSearch: Called when the user clicks "Search" button.
-   * If search is empty, fetch all books. Otherwise, add ?search=...
-   */
   const handleSearch = async () => {
     try {
       setLoading(true);
@@ -94,29 +109,69 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
     setEditBook(null);
   };
 
-  if (loading) return <p>Loading books...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <div>
-      <h2>Books in Library {libraryId}</h2>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={4}
+      >
+        <Typography variant="h4" component="h1">
+          Library Collection
+        </Typography>
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={() => setShowCreateForm(true)}
+        >
+          <AddIcon />
+        </Fab>
+      </Box>
 
-      {/* Search UI */}
-      <div style={{ margin: '1rem 0' }}>
-        <input
-          type="text"
-          placeholder="Search books..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-      <button onClick={() => setShowCreateForm(true)}>Add New Book</button>
+      <Paper sx={{ p: 2, mb: 4 }}>
+        <Box display="flex" gap={2}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search books..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button
+            variant="contained"
+            startIcon={<SearchIcon />}
+            onClick={handleSearch}
+            sx={{ minWidth: 120 }}
+          >
+            Search
+          </Button>
+        </Box>
+      </Paper>
 
       {showCreateForm && (
         <BookForm
-          libraryId={libraryId || 0}
+          libraryId={libraryId}
           onClose={() => setShowCreateForm(false)}
           onCreate={handleCreate}
         />
@@ -124,29 +179,94 @@ const BookList: React.FC<BookListProps> = ({ libraryId }) => {
 
       {editBook && (
         <BookEditForm
-          libraryId={libraryId || 0}
+          libraryId={libraryId}
           book={editBook}
           onClose={() => setEditBook(null)}
           onUpdate={handleUpdate}
         />
       )}
 
-      <ul>
+      <Grid container spacing={3}>
         {books.length > 0 ? (
           books.map((book) => (
-            <li key={book.id}>
-              {book.title} by {book.author}
-              <button onClick={() => setEditBook(book)}>Edit</button>
-              <button onClick={() => handleDelete(book.id)}>Delete</button>
-            </li>
+            <Grid item xs={6} sm={4} md={3} lg={2} key={book.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition:
+                    'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4,
+                  },
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  image={book.cover_url || placeholderCover}
+                  alt={`${book.title} cover`}
+                  sx={{
+                    height: 200,
+                    objectFit: 'cover',
+                  }}
+                />
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography
+                    variant="subtitle1"
+                    component="h3"
+                    noWrap
+                    title={book.title}
+                  >
+                    {book.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    noWrap
+                    title={book.author}
+                  >
+                    {book.author}
+                  </Typography>
+                  <Rating
+                    value={book.rating}
+                    readOnly
+                    size="small"
+                    sx={{ mt: 1 }}
+                  />
+                  <Box
+                    sx={{
+                      mt: 1,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <IconButton size="small" onClick={() => setEditBook(book)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(book.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
           ))
         ) : (
-          <p>
-            No books in this library yet. Click "Add New Book" to create one!
-          </p>
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h6" color="text.secondary">
+                No books in this library yet. Click the "+" button to add one!
+              </Typography>
+            </Paper>
+          </Grid>
         )}
-      </ul>
-    </div>
+      </Grid>
+    </Container>
   );
 };
 

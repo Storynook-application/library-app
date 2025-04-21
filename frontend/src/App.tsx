@@ -22,6 +22,10 @@ import ForgotPasswordForm from './components/Auth/ForgotPasswordForm';
 import ResetPasswordForm from './components/Auth/ResetPasswordForm';
 import LibraryList from './components/Libraries/LibraryList';
 import BookList from './components/Books/BookList';
+import Pricing from './components/Subscription/Pricing';
+import Checkout from './components/Subscription/Checkout';
+import CheckoutSuccess from './components/Subscription/CheckoutSuccess';
+import CheckoutCancel from './components/Subscription/CheckoutCancel';
 
 // Create a theme instance
 const theme = createTheme({
@@ -181,6 +185,17 @@ const App = () => {
               <Route path="/login" element={<LoginForm />} />
               <Route path="/forgot-password" element={<ForgotPasswordForm />} />
               <Route path="/reset-password" element={<ResetPasswordForm />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/checkout/success" element={<CheckoutSuccess />} />
+              <Route path="/checkout/cancel" element={<CheckoutCancel />} />
               <Route
                 path="/libraries"
                 element={

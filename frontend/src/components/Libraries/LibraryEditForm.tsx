@@ -2,6 +2,19 @@
 
 import React, { useState } from 'react';
 import api from '../../services/api';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Alert,
+  IconButton,
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 interface Library {
   id: number;
@@ -37,25 +50,66 @@ const LibraryEditForm: React.FC<LibraryEditFormProps> = ({
   };
 
   return (
-    <div>
-      <h3>Edit Library</h3>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Library Name:
-          <input
-            type="text"
+    <Dialog
+      open={true}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+        }
+      }}
+    >
+      <DialogTitle sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        pb: 1
+      }}>
+        <Typography variant="h5" component="div">
+          Edit Library
+        </Typography>
+        <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <TextField
+            required
+            fullWidth
+            id="name"
+            label="Library Name"
+            name="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required
+            autoFocus
+            margin="normal"
           />
-        </label>
-        <button type="submit">Update</button>
-        <button type="button" onClick={onClose}>
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={onClose} color="inherit">
           Cancel
-        </button>
-      </form>
-    </div>
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          color="primary"
+        >
+          Update
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

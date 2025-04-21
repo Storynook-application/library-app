@@ -124,7 +124,7 @@ bookRouter.patch('/:bookId', upload.single('coverImage'), authenticateUser, asyn
     const updatedBook = await pool.query(
       `UPDATE books
       SET title = $1, author = $2, isbn = $3, genre = $4, rating = $5,
-          cover_url = CASE WHEN $6 IS NOT NULL OR $7::boolean THEN $6 ELSE cover_url END
+          cover_url = CASE WHEN $6::text IS NOT NULL OR $7::boolean THEN $6::text ELSE cover_url END
       WHERE id = $8 AND library_id = $9 RETURNING *`,
       [title, author, isbn, genre, rating, coverUrlUpdate, removeCover, bookId, libraryId]
     );
